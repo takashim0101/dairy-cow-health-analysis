@@ -1,0 +1,123 @@
+---
+title: "Multiple Linear Regression Analysis of Dairy Cow Health Data"
+author: "Analysis Report"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## 1. Introduction
+
+This report is a submission for the QMET306/608 assessment. It presents a multiple linear regression analysis to identify significant factors associated with the average individual somatic cell count (ISCC) in dairy cows, a primary indicator of mastitis. The analysis is based on a dataset from a study on three dairy farms in Manawatu, New Zealand.
+
+## 2. Data Preparation
+
+The analysis begins with loading the necessary R packages, importing the `iscc.xlsx` dataset, and performing data cleaning and preparation. This includes handling missing values, converting data types, and log-transforming skewed variables (`averageiscc` and `timetocon`) to better meet the assumptions of linear regression. The categorical variables `farm` and `treatment` were coded as factors. For this analysis, `farm3` was excluded.
+
+```{r data_prep, include=FALSE}
+# Load libraries
+library(openxlsx)
+library(ggplot2)
+library(GGally)
+library(car)
+library(lmtest)
+library(MASS)
+
+# Load data from the Excel file in the project directory
+iscc <- read.xlsx("iscc.xlsx")
+
+# Basic cleaning and preparation
+iscc_complete <- na.omit(iscc)
+iscc_complete$treatment <- as.factor(iscc_complete$treatment)
+iscc_complete$farm <- as.factor(iscc_complete$farm)
+iscc_complete$log_averageiscc <- log10(iscc_complete$averageiscc + 1)
+iscc_complete$log_timetocon <- log10(iscc_complete$timetocon + 1)
+
+# Exclude farm 3 and drop the unused factor level
+iscc_cleaned <- iscc_complete[iscc_complete$farm != 3, ]
+iscc_cleaned$farm <- droplevels(iscc_cleaned$farm)
+```
+
+## 3. Exploratory Analysis: Scatterplot Matrix
+
+A scatterplot matrix was generated to visualize the relationships between the response variable (`log_averageiscc`) and the key explanatory variables.
+
+```{r scatterplot, echo=FALSE, fig.align='center'}
+selected_data <- iscc_cleaned[, c("log_averageiscc", "age", "farm", "lactationno", "log_timetocon", "treatment", "noservices")]
+
+ggpairs(selected_data,
+        aes(color = treatment, alpha = 0.5)) +
+  labs(title = "Scatterplot Matrix of Variables")
+```
+
+## 4. Multiple Linear Regression
+
+A multiple linear regression model was built to assess the effect of the explanatory variables on the log-transformed average ISCC. A stepwise selection procedure (`stepAIC`) was used, starting with a full model, to identify the most significant predictors.
+
+```{r model_building, include=FALSE}
+# Build the full model
+lm1 <- lm(log_averageiscc ~ age + farm + lactationno + log_timetocon + treatment + noservices, data = iscc_cleaned)
+
+# Perform stepwise model selection
+final_model <- stepAIC(lm1, direction = "both")
+```
+
+### Final Model Results
+
+The final model selected by the stepwise procedure was `log_averageiscc ~ age + farm + log_timetocon`. The table below shows the coefficients, standard errors, and p-values for the predictors in the final model.
+
+```{r model_results, echo=FALSE}
+model_summary <- summary(final_model)
+results_table <- as.data.frame(model_summary$coefficients)
+names(results_table) <- c("Coefficient", "SE", "t-value", "P-value")
+
+knitr::kable(results_table, caption = "Final Model Coefficients", digits = 3)
+```
+
+## 5. Model Diagnostics
+
+Post-estimation tests were performed to ensure the validity of the model.
+
+### Residual Plots
+
+The following plots were used to check the assumptions of linearity, normality of residuals, and homoscedasticity.
+
+```{r residual_plots, echo=FALSE, fig.cap="Diagnostic plots for the final model.", fig.align='center'}
+par(mfrow = c(2, 2))
+plot(final_model)
+par(mfrow = c(1, 1))
+```
+
+The residual plots show no major violations of the model assumptions.
+
+### Multicollinearity
+
+The Variance Inflation Factor (VIF) was calculated for each predictor to check for multicollinearity.
+
+```{r vif, echo=FALSE}
+vif_values <- vif(final_model)
+vif_table <- data.frame(Variable = names(vif_values), VIF = vif_values)
+knitr::kable(vif_table, caption = "Variance Inflation Factors (VIF)", digits = 3)
+```
+
+All VIF values are close to 1, indicating that multicollinearity is not an issue in this model.
+
+## 6. Interpretation and Conclusion
+
+A multiple linear regression analysis was conducted to identify significant factors associated with the average individual somatic cell count (a proxy for mastitis) in dairy cows. The final model, selected through a stepwise procedure, was statistically significant (F(`r summary(final_model)$fstatistic[2]`, `r summary(final_model)$fstatistic[3]`) = `r round(summary(final_model)$fstatistic[1], 1)`, p < 0.001) and explained approximately `r round(summary(final_model)$adj.r.squared * 100, 1)`% of the variance in the log-transformed average ISCC (Adjusted R-squared = `r round(summary(final_model)$adj.r.squared, 3)`).
+
+The analysis revealed that a cow's age, the farm it belonged to, and the time from the planned start of mating to conception were all significantly associated with the average ISCC. Specifically:
+
+*   For every one-year increase in a cow's **age**, the log-transformed average ISCC was predicted to increase by `r round(coef(final_model)['age'], 3)` (p < 0.001).
+*   Cows on **farm 2** had a significantly lower log-transformed average ISCC (by `r abs(round(coef(final_model)['farm2'], 3))`) compared to cows on the reference farm, farm 1 (p < 0.001).
+*   A longer **time to conception** was associated with a higher log-transformed average ISCC (coefficient = `r round(coef(final_model)['log_timetocon'], 3)`, p = `r round(summary(final_model)$coefficients['log_timetocon', 'Pr(>|t|)'], 3)`).
+
+The variables `lactationno`, `treatment`, and `noservices` were not found to be statistically significant predictors in the stepwise selection process and were therefore excluded from the final model.
+
+Post-estimation diagnostics confirmed that the model's assumptions were met. The residual plots showed no major violations, and the Variance Inflation Factor (VIF) values for all variables were close to 1, indicating no issues with multicollinearity. These findings suggest that older cows and those that take longer to conceive are at a higher risk for elevated somatic cell counts, and that farm-specific management or environmental factors also play a significant role.
+
+This project serves as a practical example of applying modern data analysis technology to address a question in veterinary science. The scientific goal was to understand the complex factors contributing to high somatic cell counts (mastitis) in dairy cows. To achieve this, we utilized **R**, a powerful statistical programming language, to implement a **multiple linear regression** model. This statistical technology allowed us to move beyond simple observation and quantify the specific impact of factors such as a cow's age and farm environment. Furthermore, by using **R Markdown**, we adopted a reproducible research paradigm, ensuring that our entire analysis, from raw data to final conclusion, is transparent, verifiable, and can be easily replicated by other scientists.
+
