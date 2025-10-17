@@ -1,6 +1,6 @@
 # Multiple Linear Regression on Dairy Cow Health Data
 
-## Project Summary 
+## Project Summary
 
 **The Problem:**  
 Mastitis — a common udder infection — is one of the biggest challenges in the dairy industry, reducing both milk quality and farm profitability.  
@@ -56,6 +56,16 @@ The analysis was carried out using **`analysis.R`**, following these main steps:
 2. **Exploratory Data Analysis** – visualized relationships using a scatterplot matrix  
 3. **Model Building** – applied stepwise selection using `stepAIC` to identify the best-fit model  
 4. **Diagnostics and Validation** – performed residual checks and multicollinearity testing (VIF)
+
+---
+
+## Skills Used
+
+*   **Programming Languages:** R
+*   **Statistical Methods:** Multiple Linear Regression, Stepwise Selection (stepAIC), ANOVA, Residual Analysis, VIF Check, Data Transformation (Log-transformation)
+*   **R Packages:** `ggplot2`, `car`, `lmtest`, `AICcmodavg`, `tidyr`, `dplyr`, `ggpubr`, `EnvStats`, `bestNormalize`, `MASS`, `openxlsx`, `writexl`, `GGally`, `reshape2`
+*   **Data Analysis Workflow:** Data Cleaning, Exploratory Data Analysis (EDA), Model Building, Post-estimation Diagnostics, Reproducible Research
+*   **Domain Knowledge:** Dairy Industry, Mastitis, Somatic Cell Count, Experimental Design (implied by QMET608 context)
 
 ---
 
