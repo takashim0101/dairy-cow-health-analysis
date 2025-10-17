@@ -1,6 +1,6 @@
 # Multiple Linear Regression on Dairy Cow Health Data
 
-## Project Summary (for a Non-Technical Audience)
+## Project Summary 
 
 **The Problem:**  
 Mastitis — a common udder infection — is one of the biggest challenges in the dairy industry, reducing both milk quality and farm profitability.  
@@ -25,7 +25,7 @@ The entire analysis is fully reproducible and transparent, ensuring trustworthy 
 
 ## Project Overview
 
-This project was conducted as part of the **QMET306/608 assessment**.  
+This project was conducted as part of the **QMET306/608 assessment in Lincoln University while I was study Experimentation**.  
 It applies multiple linear regression to identify key factors associated with **average individual somatic cell count (ISCC)** in dairy cows — an important indicator of mastitis.  
 The data come from a study across **three dairy farms in Manawatu, New Zealand**.
 
